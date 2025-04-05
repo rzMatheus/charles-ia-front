@@ -1,19 +1,56 @@
 import FormWizard from "react-form-wizard-component";
 import "react-form-wizard-component/dist/style.css";
-import {useState} from "react";
+import {ChangeEvent, useState} from "react";
 
 export default function FormWizardSample() {
 
-    const [selecionada, setSelecionada] = useState("");
+
+    const [selecionada, setSelecionada] = useState<{id: string, color: string, is_lettered: boolean}>({});
+    const [descricao, setDescricao] = useState<string>("");
+    const [retornoBackend, setRetornoBackend] = useState({})
+    const [sending, setSending] = useState<boolean>(true);
+
     const imagens = [
-        { id: "estilo1", src: "/img/estilo1.png" },
-        { id: "estilo2", src: "/img/estilo2.png" },
-        { id: "estilo3", src: "/img/estilo3.png" }
+        { id: "estilo1", src: "/img/estilo1.png", color: "preto", is_lettered: false },
+        { id: "estilo2", src: "/img/estilo2.png", color: "azul", is_lettered: true},
+        { id: "estilo3", src: "/img/estilo3.png", color: "amarelo", is_lettered: true }
     ];
 
     const handleComplete = () => {
-        console.log("Form completed!");
-        // Handle form completion logic here
+        console.log("Form completed! : ", selecionada, descricao);
+        enviarParaBackend({
+            briefing: descricao,
+            is_lettered: selecionada.is_lettered,
+            color: selecionada.color
+        })
+    };
+    const enviarParaBackend = async (dados: any) => {
+        setSending(true);
+        try {
+            const resposta = await fetch("http://localhost:8080/seu-endpoint", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(dados)
+            });
+
+            if (!resposta.ok) {
+                throw new Error(`Erro na requisição: ${resposta.status}`);
+            }
+
+            const retorno = await resposta.json();
+
+            console.log("Sucesso:", retorno);
+        } catch (erro) {
+            console.error("Erro ao enviar:", erro);
+        }finally {
+            setSending(false)
+        }
+    };
+
+    const handleChangeTextArea = (e: ChangeEvent<HTMLTextAreaElement>) => {
+        setDescricao(e.target.value)
     };
     const customTitleTemplate = () => {
         return (
@@ -56,6 +93,8 @@ export default function FormWizardSample() {
                     <h3>Descreva sua empresa</h3>
                     <p>De forma sucinta, objetiva e clara descreva a sua empresa para nós e como você a imagina.</p>
                     <textarea rows={5} className="w-full" placeholder="Conte com detalhes como é sua empresa e como você a imagina..."
+                              onChange={(event) => handleChangeTextArea(event)}
+                              value={descricao}
                     ></textarea>
                 </FormWizard.TabContent>
                 <FormWizard.TabContent title="Complemente" icon="ti-settings">
@@ -68,8 +107,8 @@ export default function FormWizardSample() {
                                     type="radio"
                                     name="estilo"
                                     value={img.id}
-                                    checked={selecionada === img.id}
-                                    onChange={() => setSelecionada(img.id)}
+                                    checked={selecionada?.id === img.id}
+                                    onChange={() => setSelecionada({id: img.id, is_lettered: img.is_lettered, color: img.color})}
                                     className="sr-only"
                                 />
                                 <div
@@ -90,7 +129,15 @@ export default function FormWizardSample() {
                 </FormWizard.TabContent>
                 <FormWizard.TabContent title="Finalize" icon="ti-check">
                     <h3>O que temos para você</h3>
-                    <p>Texto que a IA pensou para gerar sua logo</p>
+                    <p>Input enviado:</p>
+                    <p>Descrição: <b>{descricao}</b></p>
+                    <p>Imagem selecionada: <b>{JSON.stringify(selecionada)}</b></p>
+
+                    {sending && (
+                        <div className="flex items-center space-x-2 text-blue-600">
+                            <span>Enviando dados para o servidor...</span>
+                        </div>
+                    )}
                 </FormWizard.TabContent>
             </FormWizard>
             {/* add style */}
