@@ -5,9 +5,13 @@ import {ChangeEvent, useState} from "react";
 export default function FormWizardSample() {
 
 
-    const [selecionada, setSelecionada] = useState<{id: string, color: string, is_lettered: boolean}>({});
+    const [selecionada, setSelecionada] = useState<{id: string, color: string, is_lettered: boolean}>({
+        color: "",
+        id: "",
+        is_lettered: false
+    });
     const [descricao, setDescricao] = useState<string>("");
-    const [retornoBackend, setRetornoBackend] = useState({})
+    // const [retornoBackend, setRetornoBackend] = useState({})
     const [sending, setSending] = useState<boolean>(true);
 
     const imagens = [
@@ -113,7 +117,7 @@ export default function FormWizardSample() {
                                 />
                                 <div
                                     className={`border-4 rounded-xl overflow-hidden transition w-[100px] h-[100px] ${
-                                        selecionada === img.id ? "border-blue-600" : "border-transparent"
+                                        selecionada.id === img.id ? "border-blue-600" : "border-transparent"
                                     }`}
                                 >
                                     <img
